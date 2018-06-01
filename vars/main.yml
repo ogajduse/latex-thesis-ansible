@@ -1,0 +1,11 @@
+---
+latexsite:
+  domain: http://latex.feec.vutbr.cz
+  storage_dir: wp-content/uploads
+  upload_date: 2018/03
+  package_name: sablona_a_balicek
+  version: v303
+  file_suffix: zip
+installation_dir: "{{ ansible_user_dir }}"
+download_dir: /tmp
+content_dir: "{{ latexsite.package_name }}"

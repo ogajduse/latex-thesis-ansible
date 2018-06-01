@@ -1,0 +1,11 @@
+---
+latex:
+  packages:
+    selinux: python-selinux
+    core: texlive
+    dependencies:
+      - texlive-generic-extra
+      - texlive-latex-extra
+      - texlive-lang-czechslovak
+      - texlive-lang-greek
+      - lmodern

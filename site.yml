@@ -1,0 +1,83 @@
+---
+- name: Integration test for thesis package
+  hosts: all
+  vars_files:
+    - "vars/main.yml"
+    - "vars/{{ ansible_distribution }}.yml"
+
+  tasks:
+    - name: Install {{ latex.packages.selinux }} package
+      package:
+        name: "{{ latex.packages.selinux }}"
+        state: present
+      become: true
+
+    - name: Download thesis package {{ latexsite.package_name }}-{{ latexsite.version }}.{{ latexsite.file_suffix }}
+      get_url:
+        url: "{{ latexsite.domain }}/{{ latexsite.storage_dir }}/{{latexsite.upload_date }}/{{ latexsite.package_name }}-{{ latexsite.version }}.{{ latexsite.file_suffix }}"
+        dest: "{{ download_dir }}/{{ latexsite.package_name }}-{{ latexsite.version }}.{{ latexsite.file_suffix }}"
+        mode: 0644
+
+    - name: Check if the {{ content_dir }} directory exists in the {{ installation_dir }} directory
+      file:
+        path: "{{ installation_dir }}/{{ content_dir }}"
+        state: directory
+        mode: 0755
+
+    - name: Check whether the unzip package is installed
+      package:
+        name: unzip
+        state: present
+      become: true
+
+    - name: unzip the package
+      unarchive:
+        src: "{{ download_dir }}/{{ latexsite.package_name }}-{{ latexsite.version }}.{{ latexsite.file_suffix }}"
+        dest: "{{ installation_dir }}/{{ content_dir }}"
+        remote_src: yes
+
+    - name: Install {{ latex.packages.core }} package
+      package:
+        name: "{{ latex.packages.core }}"
+        state: present
+      become: true
+
+    - name: Install dependent {{ latex.packages.core }} packages
+      package:
+        name: "{{ latex.packages.dependencies }}"
+        state: present
+      become: true
+      notify:
+        - run_fmtutil
+        - run_texhash
+    - name: Force all notified handlers to run at this point, not waiting for normal sync points
+      meta: flush_handlers
+
+    - name: Copy Makefile to the {{ installation_dir }}/{{ content_dir }}
+      copy:
+        src: Makefile
+        dest: "{{ installation_dir }}/{{ content_dir }}/Makefile"
+        mode: 0644
+
+    - name: Install make
+      package:
+        name: make
+        state: present
+      become: true
+
+    - name: Run make in order to compile TeX files
+      make:
+        chdir: "{{ installation_dir }}/{{ content_dir }}"
+        target: all
+
+  handlers:
+    - name: run_fmtutil
+      command: fmtutil-sys --all
+      register: fmtutil_out
+      become: true
+      when: "ansible_distribution == 'Fedora'"
+
+    - name: run_texhash
+      command: texhash
+      register: texhash_out
+      when: "ansible_distribution == 'Fedora'"

@@ -1,0 +1,14 @@
+---
+latex:
+  packages:
+    core: texlive
+    selinux: libselinux-python
+    dependencies:
+      - texlive-babel-czech
+      - texlive-acronym
+      - texlive-engrec
+      - texlive-dirtree
+      - texlive-collection-langczechslovak
+      - texlive-sectsty
+      - texlive-greek-fontenc
+      - texlive-cbfonts
